@@ -5,7 +5,7 @@ import LanguageDropdown from "@/components/layout/LanguageDropdown";
 import SearchOverlay from "@/components/layout/SearchOverlay";
 import { ShoppingCart, User } from "lucide-react"; // ✅ thêm icon
 import logo from "@/assets/logo.svg";
-
+import { Link } from "react-router-dom";
 export default function Header() {
   const [showMega, setShowMega] = useState(false);
   const [showPagesMega, setShowPagesMega] = useState(false);
@@ -83,7 +83,8 @@ export default function Header() {
             <LanguageDropdown />
 
             {/* 🛒 Giỏ hàng */}
-            <button
+            <a
+              href="/cart"
               className="relative p-2 text-gray-700 hover:text-red-600"
               aria-label="Giỏ hàng"
             >
@@ -91,13 +92,17 @@ export default function Header() {
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">
                 2
               </span>
-            </button>
+            </a>
+
 
             {/* 👤 Đăng nhập */}
-            <button className="hidden sm:flex items-center px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition">
-              <User className="h-4 w-4 mr-2" />
-              Đăng nhập
-            </button>
+            <Link
+  to="/login"
+  className="hidden sm:flex items-center px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition"
+>
+  <User className="h-4 w-4 mr-2" />
+  Đăng nhập
+</Link>
           </div>
         </div>
       </header>
