@@ -27,35 +27,55 @@ export default function LoginPage() {
   // Nếu đã login → chuyển hướng (ưu tiên từ ?redirect=...)
   useEffect(() => {
     if (isAuthenticated()) {
-      const redirect = new URLSearchParams(location.search).get("redirect") || "/";
+      const redirect =
+        new URLSearchParams(location.search).get("redirect") || "/";
       nav(redirect, { replace: true });
     }
   }, [location.search, nav]);
 
-  const jsonLd = useMemo(() => ({
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "Đăng nhập",
-    "url": typeof window !== "undefined" ? window.location.href : undefined
-  }), []);
+  const jsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Đăng nhập",
+      url:
+        typeof window !== "undefined" ? window.location.href : undefined,
+    }),
+    []
+  );
 
   async function onSubmit(e) {
     e.preventDefault();
     setError("");
+
     const parsed = schema.safeParse({
       email: form.email.trim(),
       password: form.password,
       remember: !!form.remember,
     });
+
     if (!parsed.success) {
       setError(parsed.error.issues[0].message);
       return;
     }
+
     try {
       setSubmitting(true);
-      await login(parsed.data);
-      const redirect = new URLSearchParams(location.search).get("redirect") || "/";
-      nav(redirect, { replace: true });
+
+      // login() sẽ gọi POST /api/auth/login và trả về user
+      const user = await login(parsed.data);
+
+      // Nếu là admin → vào /admin
+      // Ngược lại → về redirect (nếu có) hoặc "/"
+      const redirect =
+        new URLSearchParams(location.search).get("redirect") || "/";
+
+      const roles = user?.roles || [];
+      if (Array.isArray(roles) && roles.includes("ROLE_ADMIN")) {
+        nav("/admin", { replace: true });
+      } else {
+        nav(redirect, { replace: true });
+      }
     } catch (err) {
       setError(err.message || "Đăng nhập thất bại. Vui lòng thử lại.");
     } finally {
@@ -68,20 +88,30 @@ export default function LoginPage() {
       <SEO
         title="Đăng nhập | Cửa hàng"
         description="Đăng nhập để theo dõi đơn hàng, lưu sổ địa chỉ và nhận ưu đãi dành riêng cho bạn."
-        canonical={typeof window !== "undefined" ? window.location.href : undefined}
+        canonical={
+          typeof window !== "undefined" ? window.location.href : undefined
+        }
         jsonLd={jsonLd}
       />
       <h1 className="mb-6 text-2xl md:text-3xl font-bold">Đăng nhập</h1>
 
       {error && (
-        <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
           {error}
         </div>
       )}
 
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <div>
-          <label htmlFor="email" className="mb-1 block text-sm font-medium">Email</label>
+          <label
+            htmlFor="email"
+            className="mb-1 block text-sm font-medium"
+          >
+            Email
+          </label>
           <input
             id="email"
             type="email"
@@ -89,13 +119,20 @@ export default function LoginPage() {
             className="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-gray-900"
             placeholder="you@example.com"
             value={form.email}
-            onChange={(e) => setForm(v => ({ ...v, email: e.target.value }))}
+            onChange={(e) =>
+              setForm((v) => ({ ...v, email: e.target.value }))
+            }
             required
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium">Mật khẩu</label>
+          <label
+            htmlFor="password"
+            className="mb-1 block text-sm font-medium"
+          >
+            Mật khẩu
+          </label>
           <div className="relative">
             <input
               id="password"
@@ -104,17 +141,23 @@ export default function LoginPage() {
               className="w-full rounded-xl border px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-gray-900"
               placeholder="••••••••"
               value={form.password}
-              onChange={(e) => setForm(v => ({ ...v, password: e.target.value }))}
+              onChange={(e) =>
+                setForm((v) => ({ ...v, password: e.target.value }))
+              }
               required
               minLength={6}
             />
             <button
               type="button"
-              onClick={() => setShowPw(s => !s)}
+              onClick={() => setShowPw((s) => !s)}
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-600 hover:bg-gray-100"
               aria-label={showPw ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
-              {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showPw ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
             </button>
           </div>
         </div>
@@ -124,13 +167,17 @@ export default function LoginPage() {
             <input
               type="checkbox"
               checked={form.remember}
-              onChange={(e) => setForm(v => ({ ...v, remember: e.target.checked }))}
+              onChange={(e) =>
+                setForm((v) => ({ ...v, remember: e.target.checked }))
+              }
             />
             Ghi nhớ đăng nhập
           </label>
 
-          {/* Placeholder: sau này trỏ tới trang quên mật khẩu thật */}
-          <Link to="/forgot-password" className="text-sm text-gray-900 underline hover:opacity-80">
+          <Link
+            to="/forgot-password"
+            className="text-sm text-gray-900 underline hover:opacity-80"
+          >
             Quên mật khẩu?
           </Link>
         </div>
@@ -147,7 +194,12 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-gray-600">
           Chưa có tài khoản?{" "}
-          <Link to="/register" className="text-gray-900 underline hover:opacity-80">Đăng ký</Link>
+          <Link
+            to="/register"
+            className="text-gray-900 underline hover:opacity-80"
+          >
+            Đăng ký
+          </Link>
         </p>
       </form>
     </main>

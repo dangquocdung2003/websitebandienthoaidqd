@@ -1,63 +1,64 @@
 // src/lib/auth.js
-// Auth mock đơn giản bằng localStorage. Thay bằng API thật khi sẵn sàng.
+// Dùng API thật + localStorage để lưu token & user
+
+import { api } from "./api.tsx";
 
 const TOKEN_KEY = "auth_token_v1";
 const USER_KEY = "auth_user_v1";
-const USERS_KEY = "auth_users_v1"; // danh sách user giả lập [{email,name,passwordHash?/plain}]
 
 let listeners = new Set();
-
-function getUsers() {
-  try { return JSON.parse(localStorage.getItem(USERS_KEY)) || []; }
-  catch { return []; }
-}
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
 
 export function getUser() {
   try { return JSON.parse(localStorage.getItem(USER_KEY)) || null; }
   catch { return null; }
 }
+
 export function isAuthenticated() {
   return !!localStorage.getItem(TOKEN_KEY);
 }
 
+// Gọi BE: POST /api/auth/login
 export async function login({ email, password }) {
-  await new Promise(r => setTimeout(r, 300)); // giả lập trễ mạng
+  const data = await api.post("/api/auth/login", {
+    usernameOrEmail: email,
+    password,
+  });
 
-  // kiểm tra trong danh sách users mock
-  const users = getUsers();
-  const found = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-  if (!found) throw new Error("Tài khoản không tồn tại.");
-
-  // ⚠️ Demo: so sánh plain. Khi làm thật phải hash + kiểm tra server-side
-  if ((found.password || "") !== password) {
-    throw new Error("Mật khẩu không đúng.");
-  }
-
-  const token = "mock-token";
-  const user = { email: found.email, name: found.name || found.email.split("@")[0] };
+  const { token, user } = data;
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
   emit();
   return user;
 }
 
+// Gọi BE: POST /api/auth/register
+// Ở FE đang có field "name", BE yêu cầu "username" → map name -> username
 export async function register({ name, email, password }) {
-  await new Promise(r => setTimeout(r, 300)); // giả lập trễ mạng
-
-  const users = getUsers();
-  const existed = users.some(u => u.email.toLowerCase() === email.toLowerCase());
-  if (existed) throw new Error("Email đã được đăng ký.");
-
-  // ⚠️ Demo: lưu password plain. Khi làm thật: không bao giờ lưu plain ở client
-  users.push({ name, email, password });
-  saveUsers(users);
+  await api.post("/api/auth/register", {
+    username: name,     // hoặc tự thiết kế lại FE thành username
+    email,
+    password,
+  });
+  // Có thể không cần lưu gì, vì sau đăng ký sẽ điều hướng sang /login
   return { name, email };
 }
 
-export function logout() {
+// (optional) gọi /api/users/me để lấy lại user từ token
+export async function fetchCurrentUser() {
+  const user = await api.get("/api/users/me");
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  emit();
+  return user;
+}
+
+// Gọi BE: POST /api/auth/logout + xóa token local
+export async function logout() {
+  try {
+    await api.post("/api/auth/logout");
+  } catch (e) {
+    // nếu token expire hoặc lỗi BE thì vẫn xoá local cho chắc
+    console.error(e);
+  }
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   emit();
@@ -67,4 +68,7 @@ export function onAuthChange(cb) {
   listeners.add(cb);
   return () => listeners.delete(cb);
 }
-function emit() { listeners.forEach(cb => cb(isAuthenticated(), getUser())); }
+
+function emit() {
+  listeners.forEach((cb) => cb(isAuthenticated(), getUser()));
+}

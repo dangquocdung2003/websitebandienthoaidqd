@@ -5,6 +5,7 @@ export const FEATURED_PRODUCTS = [
     price: "26.990.000₫",
     image:
       "https://viostore.vn/wp-content/uploads/2024/09/1-7.png", // ảnh 1
+    description: ""
   },
   {
     id: 2,
@@ -12,6 +13,7 @@ export const FEATURED_PRODUCTS = [
     price: "34.990.000₫",
     image:
       "https://cdn.phuckhangmobile.com/image/iphone-15promax-phuckhangmobile2025-32925j.jpg?_gl=1*zal35e*_gcl_au*MjI3MDg5MzA1LjE3NjAzNjc0MDI.", // ảnh gốc Cellphones
+    description: ""
   },
   {
     id: 3,
@@ -19,6 +21,7 @@ export const FEATURED_PRODUCTS = [
     price: "22.990.000₫",
     image:
       "https://viostore.vn/wp-content/uploads/2024/02/4-2.png", // ảnh 3
+    description: ""
   },
   {
     id: 4,
@@ -26,5 +29,6 @@ export const FEATURED_PRODUCTS = [
     price: "18.990.000₫",
     image:
       "https://viostore.vn/wp-content/uploads/2024/03/3-11.png", // ảnh 4
+    description: ""
   },
 ];

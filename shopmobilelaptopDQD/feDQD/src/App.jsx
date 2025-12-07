@@ -9,6 +9,7 @@ import CategoryForm from "@/admin/categories/CategoryForm";
 import CartPage from "@/pages/Cart/Cart";
 import LoginPage from "@/pages/Auth/Login";
 import RegisterPage from "@/pages/Auth/Register";
+import ProductDetails from "./components/products/ProductDetails";
 
 
 
@@ -34,6 +35,9 @@ export default function App() {
         <Route path="cart" element={<CartPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
+        <Route path="product/:id" element={<ProductDetails/>}/>
+
+
       </Route>
 
       {/* Admin */}

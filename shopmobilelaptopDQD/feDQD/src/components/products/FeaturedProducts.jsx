@@ -1,4 +1,5 @@
 import { FEATURED_PRODUCTS } from "@/data/products";
+import {Link} from "react-router-dom";
 
 export default function FeaturedProducts() {
   return (
@@ -26,9 +27,11 @@ export default function FeaturedProducts() {
                 <p className="text-red-600 font-bold text-lg mt-1">
                   {product.price}
                 </p>
-                <button className="mt-3 w-full py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-700 transition">
+                <Link to={`/product/${product.id}`}>
+                <button  className="mt-3 w-full py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-700 transition">
                   Xem chi tiết
                 </button>
+                </Link>
               </div>
             </div>
           ))}
